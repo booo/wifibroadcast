@@ -188,8 +188,14 @@ void process_payload(uint8_t *data, size_t data_len, int crc_correct, block_buff
 		rx_status->adapter[adapter_no].last_packet_seq_nr = wph->sequence_number;
 	}
 	uint32_t lost_packets = wph->sequence_number - rx_status->adapter[adapter_no].last_packet_seq_nr - 1;
+	//fprintf(stderr, "lost_packets: %d\n",lost_packets);
+	//Prevent wraparround
+	if (lost_packets < 0){
+		lost_packets = 0;
+	}
 	rx_status->adapter[adapter_no].lost_packets_cnt += lost_packets;
 	rx_status->adapter[adapter_no].last_packet_seq_nr=wph->sequence_number;
+
 	
     //debug_print("adap %d rec %x blk %x crc %d len %d\n", adapter_no, wph->sequence_number, block_num, crc_correct, data_len);
 
