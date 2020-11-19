@@ -2,7 +2,7 @@
 LDFLAGS=-lrt -lpcap
 CPPFLAGS=-Wall
 
-all: rx tx rx_status_test
+all: rx tx rx_status_test rx_status_csv
 
 
 
@@ -19,6 +19,10 @@ tx: tx.o lib.o fec.o
 
 
 rx_status_test: rx_status_test.o
+	gcc -o $@ $^ $(LDFLAGS)
+
+
+rx_status_csv: rx_status_csv.o
 	gcc -o $@ $^ $(LDFLAGS)
 
 clean:

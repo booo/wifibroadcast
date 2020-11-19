@@ -11,6 +11,8 @@ typedef struct {
 	uint32_t received_packet_cnt;
 	uint32_t wrong_crc_cnt;
 	int8_t current_signal_dbm;
+	uint32_t lost_packets_cnt;
+	uint32_t last_packet_seq_nr;
 } wifi_adapter_rx_status_t;
 
 typedef struct {
@@ -18,6 +20,7 @@ typedef struct {
 	uint32_t received_block_cnt;
 	uint32_t damaged_block_cnt;
 	uint32_t tx_restart_cnt;
+	uint32_t fecs_used_cnt;
 
 	uint32_t wifi_adapter_cnt;
 	wifi_adapter_rx_status_t adapter[MAX_PENUMBRA_INTERFACES];

@@ -48,10 +48,12 @@ int main(void) {
 		printf("Signal:\t\t\t%ddBm\n", t->adapter[0].current_signal_dbm);
 		printf("Received Pkg:\t\t%d\n", t->adapter[0].received_packet_cnt);
 		printf("Wrong CRC ad0:\t\t%d\n", t->adapter[0].wrong_crc_cnt);
+		printf("Lost pakets count:\t%d\n", t->adapter[0].lost_packets_cnt);
 		printf("\nWifibroadcast\n-------------\n");
 		printf("Wifi cards:\t\t%d\n", t->wifi_adapter_cnt);
-		printf("Received Blocks:\t\t%d\n", t->received_block_cnt);
+		printf("Received Blocks:\t%d\n", t->received_block_cnt);
 		printf("Damaged Blocks:\t\t%d\n", t->damaged_block_cnt);
+		printf("Used FEC pakets:\t%d\n", t->fecs_used_cnt);
 		printf("TX restarts:\t\t%dn", t->tx_restart_cnt);
 		usleep(1e5);
 	}
