@@ -317,6 +317,7 @@ main(int argc, char *argv[])
 	int param_port = 0;
 	int param_min_packet_length = 0;
 	int param_fifo_count = 1;
+  int mcs = 0;
 
 
 
@@ -328,7 +329,7 @@ main(int argc, char *argv[])
 			{ "help", no_argument, &flagHelp, 1 },
 			{ 0, 0, 0, 0 }
 		};
-		int c = getopt_long(argc, argv, "r:hf:p:b:m:s:x:",
+		int c = getopt_long(argc, argv, "r:hf:p:b:m:s:x:i:",
 			optiona, &nOptionIndex);
 
 		if (c == -1)
@@ -367,6 +368,10 @@ main(int argc, char *argv[])
 		case 'x': //how often is a block transmitted
 			param_transmission_count = atoi(optarg);
 			break;
+
+    case 'i':
+      mcs = atoi(optarg);
+      break;
 
 		default:
 			fprintf(stderr, "unknown switch %c\n", c);
@@ -408,7 +413,7 @@ main(int argc, char *argv[])
   u8aRadiotapHeader.known = MCS_KNOWN;
   u8aRadiotapHeader.flags = 0;
   u8aRadiotapHeader.flags |= IEEE80211_RADIOTAP_MCS_BW_20;
-  u8aRadiotapHeader.mcs = 2;
+  u8aRadiotapHeader.mcs = mcs;
   u8aRadiotapHeader.tx_power = 10;
 
     packet_header_length = packet_header_init(packet_transmit_buffer);
