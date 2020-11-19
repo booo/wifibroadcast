@@ -27,6 +27,28 @@
 #include "lib.h"
 #include "wifibroadcast.h"
 
+#define IEEE80211_RADIOTAP_MCS_HAVE_BW    0x01
+#define IEEE80211_RADIOTAP_MCS_HAVE_MCS   0x02
+#define IEEE80211_RADIOTAP_MCS_HAVE_GI    0x04
+#define IEEE80211_RADIOTAP_MCS_HAVE_FMT   0x08
+
+#define IEEE80211_RADIOTAP_MCS_BW_20    0
+#define IEEE80211_RADIOTAP_MCS_BW_40    1
+#define IEEE80211_RADIOTAP_MCS_BW_20L   2
+#define IEEE80211_RADIOTAP_MCS_BW_20U   3
+#define IEEE80211_RADIOTAP_MCS_SGI      0x04
+#define IEEE80211_RADIOTAP_MCS_FMT_GF   0x08
+
+#define IEEE80211_RADIOTAP_MCS_HAVE_FEC   0x10
+#define IEEE80211_RADIOTAP_MCS_HAVE_STBC  0x20
+#define IEEE80211_RADIOTAP_MCS_FEC_LDPC   0x10
+#define IEEE80211_RADIOTAP_MCS_STBC_MASK  0x60
+#define IEEE80211_RADIOTAP_MCS_STBC_1  1
+#define IEEE80211_RADIOTAP_MCS_STBC_2  2
+#define IEEE80211_RADIOTAP_MCS_STBC_3  3
+#define IEEE80211_RADIOTAP_MCS_STBC_SHIFT 5
+
+#define MCS_KNOWN (IEEE80211_RADIOTAP_MCS_HAVE_MCS | IEEE80211_RADIOTAP_MCS_HAVE_BW | IEEE80211_RADIOTAP_MCS_HAVE_GI | IEEE80211_RADIOTAP_MCS_HAVE_STBC | IEEE80211_RADIOTAP_MCS_HAVE_FEC)
 
 
 #define MAX_PACKET_LENGTH 4192
@@ -39,15 +61,20 @@
 
 /* this is the template radiotap header we send packets out with */
 
-static const u8 u8aRadiotapHeader[] = {
+struct ieee80211_radiotap_header {
+  u_int8_t        it_version;     /* set to 0 */
+  u_int8_t        it_pad;
+  u_int16_t       it_len;         /* entire length */
+  u_int32_t       it_present;     /* fields present */
+  int8_t          tx_power;
+  uint8_t         pad_for_tx_flags;
+  u_int16_t       tx_flags;
+  u_int8_t        known;
+  u_int8_t        flags;
+  u_int8_t        mcs;
+} __attribute__((__packed__));
 
-	0x00, 0x00, // <-- radiotap version
-	0x0c, 0x00, // <- radiotap header lengt
-	0x04, 0x80, 0x00, 0x00, // <-- bitmap
-	0x22, 
-	0x0, 
-	0x18, 0x00 
-};
+struct ieee80211_radiotap_header u8aRadiotapHeader;
 
 /* Penumbra IEEE80211 header */
 
@@ -111,7 +138,7 @@ typedef struct {
 
 int packet_header_init(uint8_t *packet_header) {
 			u8 *pu8 = packet_header;
-			memcpy(packet_header, u8aRadiotapHeader, sizeof(u8aRadiotapHeader));
+			memcpy(packet_header, &u8aRadiotapHeader, sizeof(u8aRadiotapHeader));
 			pu8 += sizeof(u8aRadiotapHeader);
 			memcpy(pu8, u8aIeeeHeader, sizeof (u8aIeeeHeader));
 			pu8 += sizeof (u8aIeeeHeader);
@@ -372,6 +399,17 @@ main(int argc, char *argv[])
 		return (1);
 	}
 
+  u8aRadiotapHeader.it_version = 0x00;
+  u8aRadiotapHeader.it_pad = 0x00;
+  u8aRadiotapHeader.it_len = sizeof(u8aRadiotapHeader);
+  u8aRadiotapHeader.it_present = 0;
+  u8aRadiotapHeader.it_present |= (1 << 10) | (1 << 15) | (1<<19);
+  u8aRadiotapHeader.tx_flags = 0x0800;
+  u8aRadiotapHeader.known = MCS_KNOWN;
+  u8aRadiotapHeader.flags = 0;
+  u8aRadiotapHeader.flags |= IEEE80211_RADIOTAP_MCS_BW_20;
+  u8aRadiotapHeader.mcs = 2;
+  u8aRadiotapHeader.tx_power = 10;
 
     packet_header_length = packet_header_init(packet_transmit_buffer);
 	fifo_init(fifo, param_fifo_count, param_data_packets_per_block);
