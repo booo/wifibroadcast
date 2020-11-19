@@ -412,7 +412,7 @@ main(int argc, char *argv[])
   u8aRadiotapHeader.tx_flags = 0x0800;
   u8aRadiotapHeader.known = MCS_KNOWN;
   u8aRadiotapHeader.flags = 0;
-  u8aRadiotapHeader.flags |= IEEE80211_RADIOTAP_MCS_BW_20;
+  u8aRadiotapHeader.flags |= IEEE80211_RADIOTAP_MCS_BW_20 | (IEEE80211_RADIOTAP_MCS_STBC_1 << IEEE80211_RADIOTAP_MCS_STBC_SHIFT);
   u8aRadiotapHeader.mcs = mcs;
   u8aRadiotapHeader.tx_power = 10;
 
