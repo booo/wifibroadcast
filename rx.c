@@ -181,8 +181,16 @@ void process_payload(uint8_t *data, size_t data_len, int crc_correct, block_buff
     data += sizeof(wifi_packet_header_t);
     data_len -= sizeof(wifi_packet_header_t);
 
-    block_num = wph->sequence_number / (param_data_packets_per_block+param_fec_packets_per_block);//if aram_data_packets_per_block+param_fec_packets_per_block would be limited to powers of two, this could be replaced by a logical AND operation
+	block_num = wph->sequence_number / (param_data_packets_per_block+param_fec_packets_per_block);//if aram_data_packets_per_block+param_fec_packets_per_block would be limited to powers of two, this could be replaced by a logical AND operation
 
+	//determine lost packets
+	if (rx_status->adapter[adapter_no].last_packet_seq_nr == -1){
+		rx_status->adapter[adapter_no].last_packet_seq_nr = wph->sequence_number;
+	}
+	uint32_t lost_packets = wph->sequence_number - rx_status->adapter[adapter_no].last_packet_seq_nr - 1;
+	rx_status->adapter[adapter_no].lost_packets_cnt += lost_packets;
+	rx_status->adapter[adapter_no].last_packet_seq_nr=wph->sequence_number;
+	
     //debug_print("adap %d rec %x blk %x crc %d len %d\n", adapter_no, wph->sequence_number, block_num, crc_correct, data_len);
 
 
@@ -331,8 +339,11 @@ void process_payload(uint8_t *data, size_t data_len, int crc_correct, block_buff
                 else if(!data_pkgs[di]->crc_correct)
                     datas_corrupt--;
 
-                if(fec_pkgs[fi]->crc_correct)
-                    good_fecs--;
+                if(fec_pkgs[fi]->crc_correct){
+					good_fecs--;
+					rx_status->fecs_used_cnt++;
+				}
+                    
 
                 //at this point, data is invalid and fec is good -> replace data with fec
                 erased_blocks[nr_fec_blocks] = di;
@@ -512,12 +523,15 @@ void status_memory_init(wifibroadcast_rx_status_t *s) {
 	s->damaged_block_cnt = 0;
 	s->tx_restart_cnt = 0;
 	s->wifi_adapter_cnt = 0;
+	s->fecs_used_cnt = 0;
 
 	int i;
 	for(i=0; i<MAX_PENUMBRA_INTERFACES; ++i) {
 		s->adapter[i].received_packet_cnt = 0;
 		s->adapter[i].wrong_crc_cnt = 0;
 		s->adapter[i].current_signal_dbm = 0;
+		s->adapter[i].last_packet_seq_nr = -1;
+		s->adapter[i].lost_packets_cnt = 0;
 	}
 }
 
