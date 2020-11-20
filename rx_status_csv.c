@@ -49,11 +49,10 @@ int main(int argc, char **argv){
 		{
 		case 'f':
 			path = optarg;
-			printf("path: %s",path);
 			break;
 		case '?':
 			if (optopt == 'f')
-				fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+				fprintf (stderr, "Option -%c requires an output path for the csv data.\n", optopt);
 			else if (isprint (optopt))
 				fprintf (stderr, "Unknown option `-%c'.\n", optopt);
 			else
@@ -65,8 +64,6 @@ int main(int argc, char **argv){
 			abort ();
 		}
 	}
-
-	printf("%s",path);
 
 	FILE* fp = fopen (path,"w+");
 
