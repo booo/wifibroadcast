@@ -12,7 +12,7 @@ typedef struct {
 	uint32_t wrong_crc_cnt;
 	int8_t current_signal_dbm;
 	uint32_t lost_packets_cnt;
-	uint32_t last_packet_seq_nr;
+	int32_t last_packet_seq_nr;
 } wifi_adapter_rx_status_t;
 
 typedef struct {
