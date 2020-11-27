@@ -105,11 +105,13 @@ usage(void)
 	    "Usage: tx [options] <interface>\n\nOptions\n"
 	    "-r <count> Number of FEC packets per block (default 4). Needs to match with rx.\n\n"
 	    "-f <bytes> Number of bytes per packet (default %d. max %d). This is also the FEC block size. Needs to match with rx\n"
-			"-p <port> Port number 0-255 (default 0)\n"
-			"-b <count> Number of data packets in a block (default 8). Needs to match with rx.\n"
-			"-x <count> Number of transmissions of a block (default 1)\n"
-			"-m <bytes> Minimum number of bytes per frame (default: 0)\n"
-			"-s <stream> If <stream> is > 1 then the parameter changes \"tx\" input from stdin to named fifos. Each fifo transports a stream over a different port (starting at -p port and incrementing). Fifo names are \"%s\". (default 1)\n"
+		"-p <port> Port number 0-255 (default 0)\n"
+		"-b <count> Number of data packets in a block (default 8). Needs to match with rx.\n"
+		"-x <count> Number of transmissions of a block (default 1)\n"
+		"-m <bytes> Minimum number of bytes per frame (default: 0)\n"
+		"-s <stream> If <stream> is > 1 then the parameter changes \"tx\" input from stdin to named fifos. Each fifo transports a stream over a different port (starting at -p port and incrementing). Fifo names are \"%s\". (default 1)\n"
+		"-c <int> enable stbc coding with (1-3) streams. To disable type 0.\n"
+		"-l <bool> enable ldpc coding. Type 1 to enable.\n"
 	    "Example:\n"
 	    "  iwconfig wlan0 down\n"
 	    "  iw dev wlan0 set monitor otherbss fcsfail\n"
@@ -317,6 +319,8 @@ main(int argc, char *argv[])
 	int param_port = 0;
 	int param_min_packet_length = 0;
 	int param_fifo_count = 1;
+	int param_stbc = 0;
+	int param_ldpc = 0;
   int mcs = 0;
 
 
@@ -329,7 +333,7 @@ main(int argc, char *argv[])
 			{ "help", no_argument, &flagHelp, 1 },
 			{ 0, 0, 0, 0 }
 		};
-		int c = getopt_long(argc, argv, "r:hf:p:b:m:s:x:i:",
+		int c = getopt_long(argc, argv, "r:hf:p:b:m:s:x:i:c:l:",
 			optiona, &nOptionIndex);
 
 		if (c == -1)
@@ -367,6 +371,14 @@ main(int argc, char *argv[])
 
 		case 'x': //how often is a block transmitted
 			param_transmission_count = atoi(optarg);
+			break;
+
+		case 'c': //stbc streams
+			param_stbc = atoi(optarg);
+			break;
+
+		case 'l': //ldpc
+			param_ldpc = atoi(optarg);
 			break;
 
     case 'i':
@@ -412,7 +424,27 @@ main(int argc, char *argv[])
   u8aRadiotapHeader.tx_flags = 0x0800;
   u8aRadiotapHeader.known = MCS_KNOWN;
   u8aRadiotapHeader.flags = 0;
-  u8aRadiotapHeader.flags |= IEEE80211_RADIOTAP_MCS_BW_20 | (IEEE80211_RADIOTAP_MCS_STBC_1 << IEEE80211_RADIOTAP_MCS_STBC_SHIFT);
+  u8aRadiotapHeader.flags |= IEEE80211_RADIOTAP_MCS_BW_20;
+	switch(param_stbc) {
+	case 0:
+		break;
+	case 1:
+		u8aRadiotapHeader.flags  |= (IEEE80211_RADIOTAP_MCS_STBC_1 << IEEE80211_RADIOTAP_MCS_STBC_SHIFT);
+		break;
+	case 2:
+		u8aRadiotapHeader.flags  |= (IEEE80211_RADIOTAP_MCS_STBC_2 << IEEE80211_RADIOTAP_MCS_STBC_SHIFT);
+		break;
+	case 3:
+		u8aRadiotapHeader.flags  |= (IEEE80211_RADIOTAP_MCS_STBC_3 << IEEE80211_RADIOTAP_MCS_STBC_SHIFT);
+		break;
+	default:
+		fprintf(stderr, "Unsupported STBC type: %d\n", param_stbc);
+		exit(1);
+	}
+	if(param_ldpc)
+	{
+		u8aRadiotapHeader.flags |= IEEE80211_RADIOTAP_MCS_FEC_LDPC;
+	}
   u8aRadiotapHeader.mcs = mcs;
   u8aRadiotapHeader.tx_power = 10;
 
