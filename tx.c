@@ -446,7 +446,7 @@ main(int argc, char *argv[])
 		u8aRadiotapHeader.flags |= IEEE80211_RADIOTAP_MCS_FEC_LDPC;
 	}
   u8aRadiotapHeader.mcs = mcs;
-  u8aRadiotapHeader.tx_power = 10;
+  u8aRadiotapHeader.tx_power = 30;
 
     packet_header_length = packet_header_init(packet_transmit_buffer);
 	fifo_init(fifo, param_fifo_count, param_data_packets_per_block);
