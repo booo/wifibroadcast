@@ -44,11 +44,13 @@ int main(void) {
 
 	for(;;) {
 		printf("\033[2J\r");
-		printf("Card 0\n------\n");
-		printf("Signal:\t\t\t%ddBm\n", t->adapter[0].current_signal_dbm);
-		printf("Received Pkg:\t\t%d\n", t->adapter[0].received_packet_cnt);
-		printf("Wrong CRC ad0:\t\t%d\n", t->adapter[0].wrong_crc_cnt);
-		printf("Lost pakets count:\t%d\n", t->adapter[0].lost_packets_cnt);
+ 		for (int i = 0; i < t->wifi_adapter_cnt; i++){
+			printf("Card %d\n------\n",i);
+			printf("Signal:\t\t\t%ddBm\n", t->adapter[i].current_signal_dbm);
+			printf("Received Pkg:\t\t%d\n", t->adapter[i].received_packet_cnt);
+			printf("Wrong CRC ad0:\t\t%d\n", t->adapter[i].wrong_crc_cnt);
+			printf("Lost pakets count:\t%d\n", t->adapter[i].lost_packets_cnt);
+		}
 		printf("\nWifibroadcast\n-------------\n");
 		printf("Wifi cards:\t\t%d\n", t->wifi_adapter_cnt);
 		printf("Received Blocks:\t%d\n", t->received_block_cnt);
