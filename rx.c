@@ -184,18 +184,25 @@ void process_payload(uint8_t *data, size_t data_len, int crc_correct, block_buff
 	block_num = wph->sequence_number / (param_data_packets_per_block+param_fec_packets_per_block);//if aram_data_packets_per_block+param_fec_packets_per_block would be limited to powers of two, this could be replaced by a logical AND operation
 
 	//determine lost packets
-	if (rx_status->adapter[adapter_no].last_packet_seq_nr == -1){
-		rx_status->adapter[adapter_no].last_packet_seq_nr = wph->sequence_number;
+	//simple check for valid seq nr
+	if (wph->sequence_number > rx_status->adapter[adapter_no].last_packet_seq_nr && wph->sequence_number < rx_status->adapter[adapter_no].last_packet_seq_nr + 100000 ){
+		if (rx_status->adapter[adapter_no].last_packet_seq_nr == -1){
+			rx_status->adapter[adapter_no].last_packet_seq_nr = wph->sequence_number;
+		}
+		uint32_t lost_packets = wph->sequence_number - rx_status->adapter[adapter_no].last_packet_seq_nr - 1;
+		//fprintf(stderr, "lost_packets: %d\n",lost_packets);
+		//Prevent wraparround
+		if (lost_packets < 0){
+			lost_packets = 0;
+		}
+		rx_status->adapter[adapter_no].lost_packets_cnt += lost_packets;
+		rx_status->adapter[adapter_no].last_packet_seq_nr=wph->sequence_number;
 	}
-	uint32_t lost_packets = wph->sequence_number - rx_status->adapter[adapter_no].last_packet_seq_nr - 1;
-	//fprintf(stderr, "lost_packets: %d\n",lost_packets);
-	//Prevent wraparround
-	if (lost_packets < 0){
-		lost_packets = 0;
+	else // if strange seq nr is received, increase lost_packets_cnt at least with 1 as we cant say anything more
+	{
+		rx_status->adapter[adapter_no].lost_packets_cnt += 1;
+		rx_status->adapter[adapter_no].last_packet_seq_nr += 1;
 	}
-	rx_status->adapter[adapter_no].lost_packets_cnt += lost_packets;
-	rx_status->adapter[adapter_no].last_packet_seq_nr=wph->sequence_number;
-
 	
     //debug_print("adap %d rec %x blk %x crc %d len %d\n", adapter_no, wph->sequence_number, block_num, crc_correct, data_len);
 
